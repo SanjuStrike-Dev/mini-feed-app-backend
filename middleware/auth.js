@@ -27,9 +27,6 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    // For static OTP system, we don't need to check isVerified
-    // The user is considered verified if they have a valid JWT token
-
     // Add user to request object
     req.user = user;
     next();
@@ -48,7 +45,6 @@ const authenticateToken = async (req, res, next) => {
       });
     }
 
-    console.error('Auth middleware error:', error);
     return res.status(500).json({
       success: false,
       message: 'Authentication error'
@@ -56,7 +52,7 @@ const authenticateToken = async (req, res, next) => {
   }
 };
 
-// Middleware to generate JWT token
+// Generate JWT token
 const generateToken = (userId) => {
   const secret = process.env.JWT_SECRET || 'mini-feed-app-super-secret-jwt-key-2024';
   return jwt.sign(
@@ -66,7 +62,7 @@ const generateToken = (userId) => {
   );
 };
 
-// Middleware to verify user ownership (for posts)
+// Verify user ownership (for posts)
 const verifyOwnership = (Model) => {
   return async (req, res, next) => {
     try {
@@ -92,7 +88,6 @@ const verifyOwnership = (Model) => {
       req.resource = resource;
       next();
     } catch (error) {
-      console.error('Ownership verification error:', error);
       return res.status(500).json({
         success: false,
         message: 'Error verifying ownership'

@@ -20,7 +20,6 @@ router.get('/', authenticateToken, async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Fetch profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch profile'

@@ -33,7 +33,6 @@ router.post('/', authenticateToken, async (req, res) => {
       data: post
     });
   } catch (error) {
-    console.error('Create post error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to create post'
@@ -64,7 +63,6 @@ router.get('/', authenticateToken, async (req, res) => {
       data: posts
     });
   } catch (error) {
-    console.error('Fetch posts error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to fetch posts'

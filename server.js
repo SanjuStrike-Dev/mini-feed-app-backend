@@ -18,36 +18,63 @@ app.set('trust proxy', 1);
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  trustProxy: true // Trust Railway proxy
+// Rate limiting - General API rate limit
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1000,
+  message: {
+    success: false,
+    message: 'Too many requests from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: true
 });
-app.use(limiter);
+
+// Auth-specific rate limiting (more restrictive for security)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 50,
+  message: {
+    success: false,
+    message: 'Too many authentication attempts, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: true
+});
+
+// Posts-specific rate limiting (moderate for content creation)
+const postsLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 200,
+  message: {
+    success: false,
+    message: 'Too many requests to posts endpoint, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  trustProxy: true
+});
+
+// Apply general rate limiting to all routes
+app.use(generalLimiter);
 
 // CORS configuration
 const allowedOrigins = process.env.NODE_ENV === 'production' 
-  ? [
-      process.env.FRONTEND_URL,
-      'http://localhost:5173', 
-      'http://localhost:5174', 
-      'http://localhost:5175'
-    ]
+  ? [process.env.FRONTEND_URL, 'http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175']
   : ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175'];
 
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -65,17 +92,15 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mini-feed
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => {
-  console.log('Connected to MongoDB');
-})
+.then(() => console.log('Connected to MongoDB'))
 .catch((error) => {
   console.error('MongoDB connection error:', error);
   process.exit(1);
 });
 
-// Routes
-app.use('/auth', authRoutes);
-app.use('/posts', postsRoutes);
+// Routes with specific rate limiting
+app.use('/auth', authLimiter, authRoutes);
+app.use('/posts', postsLimiter, postsRoutes);
 app.use('/me', profileRoutes);
 
 // Health check endpoint
@@ -105,10 +130,8 @@ app.use('*', (req, res) => {
   });
 });
 
-// Start server
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Server running on port ${PORT} (${process.env.NODE_ENV || 'development'})`);
 });
 
 module.exports = app;

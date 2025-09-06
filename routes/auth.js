@@ -30,10 +30,7 @@ router.post('/register', async (req, res) => {
     }
 
     // Create new user
-    const user = new User({
-      mobile,
-      name
-    });
+    const user = new User({ mobile, name });
 
     await user.save();
 
@@ -47,7 +44,6 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
     res.status(500).json({
       success: false,
       message: 'Registration failed'
@@ -102,7 +98,6 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Login failed'
