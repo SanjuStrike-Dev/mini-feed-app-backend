@@ -60,42 +60,16 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Debug middleware to log all requests
-app.use((req, res, next) => {
-  console.log(`=== REQUEST DEBUG ===`);
-  console.log(`Method: ${req.method}`);
-  console.log(`Path: ${req.path}`);
-  console.log(`URL: ${req.url}`);
-  console.log(`Headers:`, {
-    'content-type': req.headers['content-type'],
-    'user-agent': req.headers['user-agent'],
-    'origin': req.headers['origin']
-  });
-  console.log(`Body:`, req.body);
-  console.log(`Timestamp: ${new Date().toISOString()}`);
-  console.log(`=====================`);
-  next();
-});
-
 // Database connection
-const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/mini-feed-app';
-console.log('Attempting to connect to MongoDB...');
-console.log('MongoDB URI:', mongoUri.replace(/\/\/.*@/, '//***:***@')); // Hide credentials in logs
-
-mongoose.connect(mongoUri, {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/mini-feed-app', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('✅ Connected to MongoDB successfully');
+  console.log('Connected to MongoDB');
 })
 .catch((error) => {
-  console.error('❌ MongoDB connection error:', error);
-  console.error('Error details:', {
-    name: error.name,
-    message: error.message,
-    code: error.code
-  });
+  console.error('MongoDB connection error:', error);
   process.exit(1);
 });
 
@@ -109,16 +83,6 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     message: 'Mini Feed App API is running',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development',
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
-  });
-});
-
-// Simple test endpoint
-app.get('/test', (req, res) => {
-  res.status(200).json({ 
-    message: 'Test endpoint working',
     timestamp: new Date().toISOString()
   });
 });
