@@ -58,6 +58,8 @@ router.post('/register', async (req, res) => {
 // POST /auth/login - Login with OTP
 router.post('/login', async (req, res) => {
   try {
+    console.log('Login request received:', req.method, req.path);
+    console.log('Request body:', req.body);
     const { mobile, otp } = req.body;
 
     // Basic validation
