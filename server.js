@@ -62,7 +62,18 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Debug middleware to log all requests
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - ${new Date().toISOString()}`);
+  console.log(`=== REQUEST DEBUG ===`);
+  console.log(`Method: ${req.method}`);
+  console.log(`Path: ${req.path}`);
+  console.log(`URL: ${req.url}`);
+  console.log(`Headers:`, {
+    'content-type': req.headers['content-type'],
+    'user-agent': req.headers['user-agent'],
+    'origin': req.headers['origin']
+  });
+  console.log(`Body:`, req.body);
+  console.log(`Timestamp: ${new Date().toISOString()}`);
+  console.log(`=====================`);
   next();
 });
 
